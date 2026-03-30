@@ -446,7 +446,7 @@
         <span class="orientation-tag">1-on-1 with Yelena</span>
         <span class="orientation-tag">KWD Bloomfield Hills Office</span>
       </div>
-      <div class="info-box"><strong>Before your session:</strong> Make sure you have your KW Command username and password ready, and that you've received your KW logins email from Scott LeRoy at support@scottleroymarketing.com.. Having these on hand makes the session much smoother!</div>
+      <div class="info-box"><strong>Before your session:</strong> Make sure you have your KW Command username and password ready, and that you've received your KW logins email from Scott LeRoy at .. Having these on hand makes the session much smoother!</div>
       <ul class="checklist">
         <li><input type="checkbox" id="c8-1" onchange="handleCheck(this)"><label for="c8-1">Confirm you've received your KW logins email from Scott LeRoy<span class="item-note">From support@scottleroymarketing.com - check spam if you don't see it</span> - check spam if you don't see it</span></label></li>
         <li><input type="checkbox" id="c8-3" onchange="handleCheck(this)"><label for="c8-3">Reach out to Yelena to confirm your tech onboarding appointment</label></li>
@@ -569,20 +569,112 @@
 </div>
 <script>
 var TOTAL=10,completedStages={};
-function saveProgress(){try{localStorage.setItem('kwd_onboarding',JSON.stringify({stages:completedStages,checks:getCheckStates()}));}catch(e){}}
-function getCheckStates(){var s={};document.querySelectorAll('.checklist input[type="checkbox"]').forEach(function(c){s[c.id]=c.checked;});return s;}
-function loadProgress(){try{var d=localStorage.getItem('kwd_onboarding');if(!d)return;var p=JSON.parse(d);
-if(p.checks){Object.keys(p.checks).forEach(function(id){var c=document.getElementById(id);if(c&&p.checks[id]){c.checked=true;var l=c.parentElement.querySelector('label');if(l)l.classList.add('checked');}});}
-if(p.stages){Object.keys(p.stages).forEach(function(sid){if(p.stages[sid]){var el=document.getElementById(sid);if(!el)return;var num=sid.split('-')[1];el.classList.add('completed');el.classList.remove('open');completedStages[sid]=true;var lbl=document.getElementById('lbl-'+sid);if(lbl)lbl.textContent='Stage '+num+' Complete';var ne=el.querySelector('.stage-num');if(ne)ne.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';}});}
-updateProgress();}catch(e){}}
-function resetProgress(){if(confirm('Reset all your progress? This cannot be undone.')){try{localStorage.removeItem('kwd_onboarding');}catch(e){}location.reload();}}
+
+function saveProgress(){
+  try{
+    var checks={};
+    document.querySelectorAll('.checklist input[type="checkbox"]').forEach(function(c){checks[c.id]=c.checked;});
+    localStorage.setItem('kwd_onboarding',JSON.stringify({stages:completedStages,checks:checks}));
+  }catch(e){}
+}
+
+function loadProgress(){
+  try{
+    var d=localStorage.getItem('kwd_onboarding');
+    if(!d)return;
+    var p=JSON.parse(d);
+    if(p.checks){
+      Object.keys(p.checks).forEach(function(id){
+        if(!p.checks[id])return;
+        var c=document.getElementById(id);
+        if(!c)return;
+        c.checked=true;
+        var l=c.parentElement.querySelector('label');
+        if(l)l.classList.add('checked');
+      });
+    }
+    if(p.stages){
+      Object.keys(p.stages).forEach(function(sid){
+        if(!p.stages[sid])return;
+        var el=document.getElementById(sid);
+        if(!el)return;
+        var num=sid.split('-')[1];
+        el.classList.add('completed');
+        el.classList.remove('open');
+        completedStages[sid]=true;
+        var lbl=document.getElementById('lbl-'+sid);
+        if(lbl)lbl.textContent='Stage '+num+' Complete';
+        var ne=el.querySelector('.stage-num');
+        if(ne)ne.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+      });
+    }
+    updateProgress();
+  }catch(e){}
+}
+
+function resetProgress(){
+  if(confirm('Reset all your progress? This cannot be undone.')){
+    try{localStorage.removeItem('kwd_onboarding');}catch(e){}
+    location.reload();
+  }
+}
+
 function toggleStage(a){var b=document.getElementById(a);b.classList.contains('open')?b.classList.remove('open'):b.classList.add('open');}
-function handleCheck(a){var b=a.parentElement.querySelector('label');a.checked?b.classList.add('checked'):b.classList.remove('checked');updateProgress();saveProgress();}
-function markComplete(a){var b=document.getElementById(a),c=a.split('-')[1],d=document.getElementById('lbl-'+a),e=b.querySelector('.stage-num');if(b.classList.contains('completed')){b.classList.remove('completed');delete completedStages[a];d.textContent='Mark Stage '+c+' Complete';e.textContent=c;}else{b.classList.add('completed');b.classList.remove('open');completedStages[a]=true;d.textContent='Stage '+c+' Complete';e.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';}updateProgress();saveProgress();}
-function selectMLSPath(a,b){document.querySelectorAll('.mls-path-btn').forEach(function(c){c.classList.remove('selected');});b.classList.add('selected');document.querySelectorAll('.mls-detail').forEach(function(c){c.classList.remove('visible');});document.getElementById('mls-'+a).classList.add('visible');}
-function updateProgress(){var a=Object.keys(completedStages).length;document.getElementById('progressFill').style.width=(a/TOTAL*100)+'%';document.getElementById('progressLabel').textContent=a+' of '+TOTAL+' complete';var b=document.getElementById('completionBanner');a===TOTAL?b.classList.add('visible'):b.classList.remove('visible');}
-function copyBrokerNum(a){if(navigator.clipboard){navigator.clipboard.writeText('6505391898').then(function(){a.textContent='Copied!';setTimeout(function(){a.textContent='Copy Number';},2000);});}else{a.textContent='6505391898';setTimeout(function(){a.textContent='Copy Number';},3000);}}
+
+function handleCheck(a){
+  var b=a.parentElement.querySelector('label');
+  a.checked?b.classList.add('checked'):b.classList.remove('checked');
+  updateProgress();
+  saveProgress();
+}
+
+function markComplete(a){
+  var b=document.getElementById(a),c=a.split('-')[1],d=document.getElementById('lbl-'+a),e=b.querySelector('.stage-num');
+  if(b.classList.contains('completed')){
+    b.classList.remove('completed');
+    delete completedStages[a];
+    d.textContent='Mark Stage '+c+' Complete';
+    e.textContent=c;
+  }else{
+    b.classList.add('completed');
+    b.classList.remove('open');
+    completedStages[a]=true;
+    d.textContent='Stage '+c+' Complete';
+    e.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+  }
+  updateProgress();
+  saveProgress();
+}
+
+function selectMLSPath(a,b){
+  document.querySelectorAll('.mls-path-btn').forEach(function(c){c.classList.remove('selected');});
+  b.classList.add('selected');
+  document.querySelectorAll('.mls-detail').forEach(function(c){c.classList.remove('visible');});
+  document.getElementById('mls-'+a).classList.add('visible');
+}
+
+function updateProgress(){
+  var a=Object.keys(completedStages).length;
+  document.getElementById('progressFill').style.width=(a/TOTAL*100)+'%';
+  document.getElementById('progressLabel').textContent=a+' of '+TOTAL+' complete';
+  var b=document.getElementById('completionBanner');
+  a===TOTAL?b.classList.add('visible'):b.classList.remove('visible');
+}
+
+function copyBrokerNum(a){
+  if(navigator.clipboard){
+    navigator.clipboard.writeText('6505391898').then(function(){
+      a.textContent='Copied!';
+      setTimeout(function(){a.textContent='Copy Number';},2000);
+    });
+  }else{
+    a.textContent='6505391898';
+    setTimeout(function(){a.textContent='Copy Number';},3000);
+  }
+}
+
 function goTo(url){window.open(url,'_blank');return false;}
+
 window.addEventListener('DOMContentLoaded',function(){loadProgress();});
 </script>
 </body>
