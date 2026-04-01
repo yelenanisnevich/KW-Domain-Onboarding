@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KW Domain - Agent Onboarding</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rouge: #9B2335;
+    --rouge-dark: #7a1a28;
+    --rouge-light: #f5e8ea;
+    --charcoal: #1e1e1e;
+    --mid: #4a4a4a;
+    --muted: #888;
+    --border: #e2e2e2;
+    --bg: #fafaf8;
+    --success: #2d7a4f;
+    --success-bg: #edf7f2;
+    --card-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--charcoal); line-height: 1.6; min-height: 100vh; }
+
+  .header { background: var(--charcoal); position: relative; overflow: hidden; }
+  .header-inner { max-width: 820px; margin: 0 auto; padding: 48px 32px 40px; position: relative; z-index: 1; }
+  .header-accent { position: absolute; top: 0; right: 0; width: 320px; height: 100%; background: var(--rouge); clip-path: polygon(18% 0, 100% 0, 100% 100%, 0% 100%); opacity: 0.85; }
+  .kw-badge { display: inline-flex; align-items: center; gap: 10px; background: var(--rouge); color: white; padding: 6px 16px 6px 10px; border-radius: 4px; font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 20px; }
+  .kw-badge-dot { width: 8px; height: 8px; background: white; border-radius: 50%; opacity: 0.7; }
+  .header h1 { font-family: 'Playfair Display', serif; font-size: 38px; font-weight: 600; color: white; line-height: 1.2; margin-bottom: 14px; position: relative; z-index: 2; }
+  .header-sub { color: rgba(255,255,255,0.72); font-size: 16px; font-weight: 300; max-width: 480px; position: relative; z-index: 2; }
+  .header-sub strong { color: rgba(255,255,255,0.95); font-weight: 500; }
+
+  .progress-bar-wrap { background: white; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .progress-inner { max-width: 820px; margin: 0 auto; padding: 12px 32px; display: flex; align-items: center; gap: 16px; }
+  .progress-track { flex: 1; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--rouge); border-radius: 99px; transition: width 0.4s ease; width: 0%; }
+  .progress-label { font-size: 12px; color: var(--muted); white-space: nowrap; min-width: 100px; text-align: right; }
+
+  .main { max-width: 820px; margin: 0 auto; padding: 40px 32px 80px; }
+
+  .stage { background: white; border-radius: 12px; box-shadow: var(--card-shadow); margin-bottom: 24px; overflow: hidden; border: 1px solid var(--border); transition: box-shadow 0.2s; }
+  .stage:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.10); }
+  .stage.completed { border-left: 4px solid var(--success); }
+  .stage-header { display: flex; align-items: center; padding: 22px 28px; cursor: pointer; gap: 18px; user-select: none; }
+  .stage-num { width: 40px; height: 40px; border-radius: 50%; background: var(--rouge-light); color: var(--rouge); font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.3s; }
+  .stage.completed .stage-num { background: var(--success-bg); color: var(--success); }
+  .stage-title-wrap { flex: 1; }
+  .stage-title { font-size: 17px; font-weight: 500; color: var(--charcoal); margin-bottom: 2px; }
+  .stage-subtitle { font-size: 13px; color: var(--muted); }
+  .stage-chevron { width: 20px; height: 20px; color: var(--muted); transition: transform 0.3s; flex-shrink: 0; }
+  .stage.open .stage-chevron { transform: rotate(180deg); }
+  .stage-body { display: none; padding: 0 28px 28px; border-top: 1px solid var(--border); }
+  .stage.open .stage-body { display: block; }
+  .stage-intro { font-size: 14px; color: var(--mid); margin: 20px 0; line-height: 1.7; }
+
+  .alert { background: #fff8e8; border: 1px solid #f0d080; border-left: 4px solid #d4a017; border-radius: 8px; padding: 14px 18px; font-size: 13px; color: #5a4200; margin-bottom: 18px; line-height: 1.6; }
+  .alert strong { color: #3d2e00; }
+  .info-box { background: #f0f6ff; border: 1px solid #c0d8f8; border-left: 4px solid #3b7dd8; border-radius: 8px; padding: 14px 18px; font-size: 13px; color: #1a3a6b; margin-bottom: 18px; line-height: 1.6; }
+  .info-box strong { color: #0d2550; }
+  .success-box { background: var(--success-bg); border: 1px solid #a8d8bc; border-left: 4px solid var(--success); border-radius: 8px; padding: 14px 18px; font-size: 13px; color: #1a4a32; margin-bottom: 18px; line-height: 1.6; }
+
+  .checklist { list-style: none; margin-bottom: 22px; }
+  .checklist li { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--rouge); margin-top: 2px; cursor: pointer; flex-shrink: 0; }
+  .checklist label { font-size: 14px; color: var(--charcoal); cursor: pointer; line-height: 1.5; flex: 1; }
+  .checklist label.checked { text-decoration: line-through; color: var(--muted); }
+  .item-note { font-size: 12px; color: var(--muted); display: block; margin-top: 3px; }
+
+  .step-list { list-style: none; margin: 16px 0 22px; counter-reset: steps; }
+  .step-list li { counter-increment: steps; display: flex; gap: 14px; padding: 11px 0; border-bottom: 1px solid #f5f5f5; font-size: 14px; color: var(--mid); line-height: 1.5; align-items: flex-start; }
+  .step-list li:last-child { border-bottom: none; }
+  .step-list li::before { content: counter(steps); background: var(--rouge-light); color: var(--rouge); font-weight: 600; font-size: 12px; min-width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+
+  .btn { display: inline-flex; align-items: center; gap: 8px; background: var(--rouge); color: white; padding: 12px 22px; border-radius: 8px; font-size: 14px; font-weight: 500; text-decoration: none; transition: background 0.2s, transform 0.1s; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .btn:hover { background: var(--rouge-dark); transform: translateY(-1px); }
+  .btn-outline { background: white; color: var(--rouge); border: 1.5px solid var(--rouge); }
+  .btn-outline:hover { background: var(--rouge-light); }
+  .btn-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+
+  .broker-callout { background: var(--charcoal); border-radius: 10px; padding: 18px 22px; margin-bottom: 18px; display: flex; align-items: center; gap: 18px; }
+  .broker-callout-label { font-size: 12px; color: rgba(255,255,255,0.55); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
+  .broker-callout-num { font-family: 'Playfair Display', serif; font-size: 26px; color: white; letter-spacing: 0.04em; }
+  .broker-callout-copy { margin-left: auto; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 7px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.2s; flex-shrink: 0; }
+  .broker-callout-copy:hover { background: rgba(255,255,255,0.2); }
+
+  .selector-label { font-size: 13px; font-weight: 500; color: var(--mid); margin-bottom: 10px; display: block; }
+  .selector-options { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+  .selector-opt { padding: 8px 16px; border-radius: 6px; border: 1.5px solid var(--border); font-size: 13px; cursor: pointer; background: white; color: var(--mid); transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+  .selector-opt:hover { border-color: var(--rouge); color: var(--rouge); }
+  .selector-opt.selected { background: var(--rouge-light); border-color: var(--rouge); color: var(--rouge); font-weight: 500; }
+  .tech-link-box { display: none; background: var(--rouge-light); border: 1px solid #e0b0b8; border-radius: 8px; padding: 16px 20px; margin-bottom: 18px; }
+  .tech-link-box.visible { display: block; }
+  .tech-link-box p { font-size: 14px; color: var(--rouge-dark); margin-bottom: 12px; line-height: 1.6; }
+
+  .mls-paths { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+  .mls-path-btn { flex: 1; min-width: 160px; padding: 14px 18px; border-radius: 10px; border: 1.5px solid var(--border); background: white; cursor: pointer; text-align: left; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+  .mls-path-btn:hover { border-color: var(--rouge); }
+  .mls-path-btn.selected { border-color: var(--rouge); background: var(--rouge-light); }
+  .mls-path-btn .path-title { font-size: 14px; font-weight: 500; color: var(--charcoal); margin-bottom: 4px; }
+  .mls-path-btn .path-sub { font-size: 12px; color: var(--muted); }
+  .mls-path-btn.selected .path-title { color: var(--rouge); }
+  .mls-detail { display: none; }
+  .mls-detail.visible { display: block; }
+
+  .policy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-bottom: 22px; }
+  .policy-card { border: 1.5px solid var(--border); border-radius: 10px; padding: 16px 18px; text-decoration: none; display: flex; align-items: flex-start; gap: 14px; transition: all 0.15s; background: white; }
+  .policy-card:hover { border-color: var(--rouge); background: var(--rouge-light); transform: translateY(-1px); }
+  .policy-icon { width: 36px; height: 36px; background: var(--rouge-light); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .policy-card-title { font-size: 13px; font-weight: 500; color: var(--charcoal); margin-bottom: 3px; line-height: 1.3; }
+  .policy-card-sub { font-size: 12px; color: var(--muted); }
+
+  .orientation-card { background: var(--charcoal); border-radius: 12px; padding: 24px; margin-bottom: 20px; position: relative; overflow: hidden; }
+  .orientation-card::before { content: ''; position: absolute; top: 0; right: 0; width: 120px; height: 100%; background: var(--rouge); opacity: 0.2; clip-path: polygon(30% 0, 100% 0, 100% 100%, 0% 100%); }
+  .orientation-card h3 { font-family: 'Playfair Display', serif; color: white; font-size: 18px; margin-bottom: 8px; }
+  .orientation-card p { color: rgba(255,255,255,0.65); font-size: 13px; line-height: 1.6; margin-bottom: 14px; }
+  .orientation-tag { display: inline-block; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); font-size: 12px; padding: 4px 10px; border-radius: 4px; margin-right: 6px; margin-bottom: 4px; }
+
+  .agent-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .info-collect-card { border: 1.5px solid var(--border); border-radius: 10px; padding: 18px; background: white; }
+  .info-collect-card h4 { font-size: 14px; font-weight: 500; color: var(--charcoal); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .info-collect-card p { font-size: 13px; color: var(--mid); line-height: 1.6; }
+  .badge { display: inline-flex; align-items: center; background: var(--rouge-light); color: var(--rouge); font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; }
+
+  .hours-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .hours-item { background: #f8f8f6; border-radius: 8px; padding: 10px 12px; }
+  .hours-label { font-weight: 500; color: var(--charcoal); margin-bottom: 2px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .hours-time { color: var(--mid); font-size: 12px; }
+
+  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .pricing-card { border: 1.5px solid var(--border); border-radius: 10px; padding: 16px 18px; background: white; }
+  .pricing-card h4 { font-size: 13px; font-weight: 500; color: var(--charcoal); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .pricing-card table { width: 100%; font-size: 13px; color: var(--mid); border-collapse: collapse; }
+  .pricing-card td { padding: 3px 0; }
+  .pricing-card td:last-child { text-align: right; font-weight: 500; color: var(--charcoal); }
+  .pricing-card .card-note { font-size: 11px; color: var(--muted); margin-top: 8px; }
+
+  .divider { height: 1px; background: var(--border); margin: 22px 0; }
+  .section-label { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 12px; display: block; }
+
+  .mark-complete-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--success-bg); border: 1.5px solid var(--success); color: var(--success); border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
+  .mark-complete-btn:hover { background: #d4eddf; }
+  .stage.completed .mark-complete-btn { background: var(--success); color: white; }
+
+  .completion-banner { display: none; background: var(--charcoal); border-radius: 12px; padding: 32px; text-align: center; margin-bottom: 24px; position: relative; overflow: hidden; }
+  .completion-banner.visible { display: block; }
+  .completion-banner::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--rouge); }
+  .completion-banner h2 { font-family: 'Playfair Display', serif; color: white; font-size: 26px; margin-bottom: 10px; }
+  .completion-banner p { color: rgba(255,255,255,0.65); font-size: 15px; }
+
+  .footer { background: var(--charcoal); color: rgba(255,255,255,0.5); text-align: center; padding: 28px 32px; font-size: 13px; }
+  .footer strong { color: rgba(255,255,255,0.85); }
+
+  code { background: rgba(0,0,0,0.07); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+  a { color: var(--rouge); }
+
+  @media (max-width: 600px) {
+    .header-accent { display: none; }
+    .header h1 { font-size: 28px; }
+    .main { padding: 24px 16px 60px; }
+    .stage-header { padding: 16px 18px; }
+    .stage-body { padding: 0 18px 22px; }
+    .progress-inner { padding: 10px 16px; }
+    .agent-info-grid, .pricing-grid { grid-template-columns: 1fr; }
+    .hours-grid { grid-template-columns: 1fr; }
+    .broker-callout { flex-wrap: wrap; }
+    .policy-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-accent"></div>
+  <div class="header-inner">
+    <div class="kw-badge"><span class="kw-badge-dot"></span>KW Domain Luxury Homes International</div>
+    <h1>Welcome to<br>KW Domain!</h1>
+    <p class="header-sub">We're so glad you're here. This guide walks you through every step - at your own pace. <strong>Check off each item as you go!</strong></p>
+  </div>
+</div>
+
+<div class="progress-bar-wrap">
+  <div class="progress-inner">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">0 of 10 complete</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="completion-banner" id="completionBanner">
+    <h2>You're all set!</h2>
+    <p>You've completed your KW Domain onboarding. Welcome to the family - let's go!</p>
+  </div>
+
+  <!-- STAGE 1 -->
+  <div class="stage open" id="stage-1">
+    <div class="stage-header" onclick="toggleStage('stage-1')">
+      <div class="stage-num">1</div>
+      <div class="stage-title-wrap">
+        <div class="stage-title">Paperwork &amp; Contracts</div>
+        <div class="stage-subtitle">DocuSign onboarding documents</div>
+      </div>
+      <svg class="stage-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="stage-body">
+      <p class="stage-intro">Your official onboarding paperwork is coming via <strong>DocuSign</strong>. Before it arrives, review the checklist so you have everything ready. You have <strong>7 business days</strong> to complete it - need more time? Just reach out to Agent Services at agentservices1017@gmail.com..</p>
+      <div class="alert"><strong>7-Business-Day Deadline:</strong> Complete your DocuSign within 7 business days. Need an extension? Contact Allison Ferris in Agent Services before the deadline.</div>
+      <ul class="checklist">
+        <li><input type="checkbox" id="c1-1" onchange="handleCheck(this)"><label for="c1-1">Review the document checklist - have everything ready before your DocuSign arrives<span class="item-note">Bank info, credit card, sponsor info, and photo ID</span></label></li>
+        <li><input type="checkbox" id="c1-2" onchange="handleCheck(this)"><label for="c1-2">Watch the Binding Sponsorship video before completing your paperwork<span class="item-note">Required - explains how to choose your sponsor correctly</span></label></li>
+        <li><input type="checkbox" id="c1-3" onchange="handleCheck(this)"><label for="c1-3">Complete your DocuSign when it arrives<span class="item-note">Check your spam/promotions folder if you don't see it</span></label></li>
+        <li><input type="checkbox" id="c1-4" onchange="handleCheck(this)"><label for="c1-4">NOCBOR Application (if applicable) - confirm it was included and completed</label></li>
+      </ul>
+      <div class="btn-group">
+        <a href="javascript:void(0)" onclick="goTo('https://drive.google.com/file/d/1DmOiSwbQY91qbAFMgn2XkcvM5JS5Al9s/view?usp=drive_link'); return false;" class="btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>View Document Checklist</a>
+        <a href="javascript:void(0)" onclick="goTo('https://www.youtube.com/watch?v=lHdwT23yBtI'); return false;" class="btn btn-outline"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>Binding Sponsorship Video</a>
+      </div>
+      <div class="divider"></div>
+      <button class="mark-complete-btn" onclick="markComplete('stage-1')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="lbl-stage-1">Mark Stage 1 Complete</span></button>
+    </div>
+  </div>
+
+  <!-- STAGE 2 -->
+  <div class="stage" id="stage-2">
+    <div class="stage-header" onclick="toggleStage('stage-2')">
+      <div class="stage-num">2</div>
+      <div class="stage-title-wrap">
+        <div class="stage-title">Tech Setup - KW Command</div>
+        <div class="stage-subtitle">Get into the KW system + complete your tech questionnaire</div>
+      </div>
+      <svg class="stage-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="stage-body">
+      <p class="stage-intro">You should have received a separate email from <strong>Keller Williams Command</strong> - check your spam or promotions folder! Some info repeats from your DocuSign, but it all needs to be entered here too. This is what officially gets you into the KW system.</p>
+      <div class="alert"><strong>Sponsor Reminder:</strong> Enter the same sponsor you listed on your DocuSign. Want to change? Pause and contact Agent Services first.</div>
+      <div class="info-box"><strong>Username &amp; Password Tip:</strong> Format: <strong>first initial + last name + a number</strong><br>Example: <code>jdoe25</code> for both username and password. You'll need these for the tech questionnaire - have them ready!</div>
+      <div class="info-box"><strong>KW Logins Email:</strong> Before your tech onboarding session, you'll receive an email from <strong>Scott LeRoy</strong> at support@scottleroymarketing.com with all of your KW login credentials. We'll default to using your KW email across our systems (including the printer) - if you'd prefer your personal email instead, just let Agent Services know!</div>
+      <ul class="checklist">
+        <li><input type="checkbox" id="c2-1" onchange="handleCheck(this)"><label for="c2-1">Complete the KW Command onboarding steps from the email<span class="item-note">Check spam/promotions if you don't see it</span></label></li>
+        <li><input type="checkbox" id="c2-2" onchange="handleCheck(this)"><label for="c2-2">Set up your KW Command username and password<span class="item-note">You'll need these for the tech questionnaire - have them ready!</span></label></li>
+        <li><input type="checkbox" id="c2-3" onchange="handleCheck(this)"><label for="c2-3">Complete your KW Domain Tech Questionnaire<span class="item-note">Please pay attention to the options to ensure you are selecting the correct one for you</span></label></li>
+      </ul>
+      <div class="btn-group">
+        <a href="javascript:void(0)" onclick="goTo('https://form.jotform.com/scottleroymarketing/new-slm-onboarding-form'); return false;" class="btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Complete Tech Questionnaire</a>
+      </div>
+      <div class="divider"></div>
+      <button class="mark-complete-btn" onclick="markComplete('stage-2')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="lbl-stage-2">Mark Stage 2 Complete</span></button>
+    </div>
+  </div>
+
+  <!-- STAGE 3 -->
+  <div class="stage" id="stage-3">
+    <div class="stage-header" onclick="toggleStage('stage-3')">
+      <div class="stage-num">3</div>
+      <div class="stage-title-wrap">
+        <div class="stage-title">License Transfer - MiPLUS</div>
+        <div class="stage-subtitle">Transfer your Michigan real estate license to KW Domain</div>
+      </div>
+      <svg class="stage-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="stage-body">
+      <p class="stage-intro">Before we can get you up and running, you'll need to transfer your Michigan real estate license to KW Domain through <strong>MiPLUS</strong>. We've made it easy with step-by-step instructions below.</p>
+      <div class="alert"><strong>Just passed your exam?</strong> It may take up to a week for your testing info to show up in MiPLUS. In a hurry? Call LARA directly: <strong>517-241-0199</strong></div>
+      <span class="section-label">You'll need our broker license number</span>
+      <div class="broker-callout">
+        <div>
+          <div class="broker-callout-label">KW Domain Broker License #</div>
+          <div class="broker-callout-num">6505391898</div>
+        </div>
+        <button class="broker-callout-copy" onclick="copyBrokerNum(this)">Copy Number</button>
+      </div>
+      <span class="section-label">Step-by-step: How to transfer in MiPLUS</span>
+      <ol class="step-list">
+        <li>Go to <a href="javascript:void(0)" onclick="goTo('https://aca-prod.accela.com/MILARA/Default.aspx'); return false;"><strong>MiPLUS</strong></a> and log in.</li>
+        <li>Once logged in, select the <strong>Licenses</strong> tab above the welcome message.</li>
+        <li>Find your license in the list and click <strong>Modification</strong> next to your license number.</li>
+        <li>Select <strong>"Transfer or Employing Broker Notification"</strong> and click <strong>Continue Application</strong>.</li>
+        <li>Scroll to <strong>New Employing Broker Information</strong> and enter our 10-digit Broker number: <code>6505391898</code>. The company name and address will auto-fill.</li>
+        <li>Review your information and click <strong>Continue Application</strong> to submit.</li>
+        <li>Save your confirmation record number - then send Agent Services a quick message to confirm it went through!</li>
+      </ol>
+      <div class="success-box">Once submitted, KW Domain receives a pending-approval notification. No further action needed - just let us know it's done!</div>
+      <ul class="checklist">
+        <li><input type="checkbox" id="c3-1" onchange="handleCheck(this)"><label for="c3-1">Log into MiPLUS<span class="item-note"><a href="javascript:void(0)" onclick="goTo('https://aca-prod.accela.com/MILARA/Default.aspx'); return false;">Click here to log in</a></span></label></li>
+        <li><input type="checkbox" id="c3-2" onchange="handleCheck(this)"><label for="c3-2">Submit license transfer to KW Domain (Broker #: 6505391898)</label></li>
+        <li><input type="checkbox" id="c3-3" onchange="handleCheck(this)"><label for="c3-3">Confirm your submission with Agent Services<span class="item-note">A quick message ensures nothing slips through!</span></label></li>
+      </ul>
+      <div class="btn-group">
+        <a href="javascript:void(0)" onclick="goTo('https://aca-prod.accela.com/MILARA/Default.aspx'); return false;" class="btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Go to MiPLUS System</a>
+      </div>
+      <div class="divider"></div>
+      <button class="mark-complete-btn" onclick="markComplete('stage-3')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="lbl-stage-3">Mark Stage 3 Complete</span></button>
+    </div>
+  </div>
+
+  <!-- STAGE 4 -->
+  <div class="stage" id="stage-4">
+    <div class="stage-header" onclick="toggleStage('stage-4')">
+      <div class="stage-num">4</div>
+      <div class="stage-title-wrap">
+        <div class="stage-title">Compliance &amp; Policy</div>
+        <div class="stage-subtitle">Key policies &amp; procedures to review and bookmark</div>
+      </div>
+      <svg class="stage-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="stage-body">
+      <p class="stage-intro">Review the key policy documents below and bookmark them for easy reference - you'll come back to these often!</p>
+      <div class="policy-grid">
+        <a href="javascript:void(0)" onclick="goTo('https://drive.google.com/file/d/1k5WwOtb9DExGZgY-l44nYrMqTMucP2VF/view?usp=drive_link'); return false;" class="policy-card">
+          <div class="policy-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--rouge)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div><div class="policy-card-title">KWRI Policy &amp; Procedure Manual</div><div class="policy-card-sub">Keller Williams corporate policies</div></div>
+        </a>
+        <a href="javascript:void(0)" onclick="goTo('https://drive.google.com/file/d/1juIsOiosnGOVw2FP-mpIkB0KVPP64kAn/view?usp=drive_link'); return false;" class="policy-card">
+          <div class="policy-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--rouge)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+          <div><div class="policy-card-title">KW Domain Office Policy Guidelines</div><div class="policy-card-sub">Office-specific guidelines &amp; protocols</div></div>
+        </a>
+      </div>
+      <ul class="checklist">
+        <li><input type="checkbox" id="c4-1" onchange="handleCheck(this)"><label for="c4-1">Review the KWRI Policy &amp; Procedure Manual</label></li>
+        <li><input type="checkbox" id="c4-2" onchange="handleCheck(this)"><label for="c4-2">Review the KW Domain Office Policy Guidelines</label></li>
+      </ul>
+      <div class="divider"></div>
+      <button class="mark-complete-btn" onclick="markComplete('stage-4')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="lbl-stage-4">Mark Stage 5 Complete</span></button>
+    </div>
+  </div>
+
+  <!-- STAGE 5 -->
+  <div class="stage" id="stage-5">
+    <div class="stage-header" onclick="toggleStage('stage-5')">
+      <div class="stage-num">5</div>
+      <div class="stage-title-wrap">
+        <div class="stage-title">MLS &amp; Board of Realtors</div>
+        <div class="stage-subtitle">NOCBOR membership &amp; Realcomp access</div>
+      </div>
+      <svg class="stage-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="stage-body">
+      <p class="stage-intro">We're primarily members of <strong>NOCBOR</strong>, which connects to Realcomp for MLS access. Your path depends on your situation - select below.</p>
+      <div class="mls-paths">
+        <button class="mls-path-btn" onclick="selectMLSPath('new', this)"><div class="path-title">New to NOCBOR</div><div class="path-sub">First time joining the board</div></button>
+        <button class="mls-path-btn" onclick="selectMLSPath('existing', this)"><div class="path-title">Existing NOCBOR Member</div><div class="path-sub">Transferring from another brokerage</div></button>
+        <button class="mls-path-btn" onclick="selectMLSPath('moving', this)"><div class="path-title">Moving from Another Board</div><div class="path-sub">Different board/MLS entirely</div></button>
+      </div>
+      <div class="mls-detail" id="mls-new">
+        <ul class="checklist">
+          <li><input type="checkbox" id="c5-n1" onchange="handleCheck(this)"><label for="c5-n1">NOCBOR application was in your DocuSign - confirm it was completed</label></li>
+          <li><input type="checkbox" id="c5-n2" onchange="handleCheck(this)"><label for="c5-n2">Watch for a NOCBOR email asking you to approve membership charges<span class="item-note">Reply to approve - this activates your membership</span></label></li>
+          <li><input type="checkbox" id="c5-n3" onchange="handleCheck(this)"><label for="c5-n3">Watch for your Realcomp intro email<span class="item-note">Call the number provided to get your username and password</span></label></li>
+          <li><input type="checkbox" id="c5-n4" onchange="handleCheck(this)"><label for="c5-n4">Log into Realcomp and confirm MLS access is active</label></li>
+        </ul>
+      </div>
+      <div class="mls-detail" id="mls-existing">
+        <div class="info-box">Agent Services will email NOCBOR directly to process your transfer - you don't need to submit a new application.</div>
+        <ul class="checklist">
+          <li><input type="checkbox" id="c5-e1" onchange="handleCheck(this)"><label for="c5-e1">Confirm with Agent Services that your NOCBOR transfer has been submitted</label></li>
+          <li><input type="checkbox" id="c5-e2" onchange="handleCheck(this)"><label for="c5-e2">Watch for NOCBOR confirmation that your transfer is complete</label></li>
+          <li><input type="checkbox" id="c5-e3" onchange="handleCheck(this)"><label for="c5-e3">Confirm your Realcomp access is active under KW Domain</label></li>
+        </ul>
+      </div>
+      <div class="mls-detail" id="mls-moving">
+        <div class="info-box">Moving from a different board is handled individually. Contact Agent Services and we'll walk you through the right steps.</div>
+        <ul class="checklist">
+          <li><input type="checkbox" id="c5-m1" onchange="handleCheck(this)"><label for="c5-m1">Contact Agent Services to discuss your board transfer</label></li>
+        </ul>
+      </div>
+      <button class="mark-complete-btn" onclick="markComplete('stage-5')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="lbl-stage-5">Mark Stage 5 Complete</span></button>
+    </div>
+  </div>
+
+  <!-- STAGE 6 -->
+  <div class="stage" id="stage-6">
+    <div class="stage-header" onclick="toggleStage('stage-6')">
+      <div class="stage-num">6</div>
+      <div class="stage-title-wrap">
+        <div class="stage-title">Office Intro &amp; Culture</div>
+        <div class="stage-subtitle">Meet the team, learn protocols, send us a few things</div>
+      </div>
+      <svg class="stage-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="stage-body">
+      <p class="stage-intro">Getting connected with the KW Domain family is one of the best parts of onboarding! A couple of items below require you to send something to Agent Services - please don't skip them.</p>
+      <span class="section-label">We need a couple of things from you</span>
+      <div class="agent-info-grid">
+        <div class="info-collect-card">
+          <h4><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--rouge)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg>Professional Headshot <span class="badge">Send to Agent Services</span></h4>
+          <p>If you have a professional headshot, please send it over! If not, we can take one at orientation - before or after works great.</p>
+        </div>
+        <div class="info-collect-card">
+          <h4><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--rouge)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>After-Hours Access Code <span class="badge">Send to Agent Services</span></h4>
+          <p>Choose a 4-digit code followed by <code>#</code> for access at both our Birmingham and Bloomfield offices. If it's taken, we'll let you know!</p>
+        </div>
+      </div>
+      <ul class="checklist">
+        <li><input type="checkbox" id="c6-1" onchange="handleCheck(this)"><label for="c6-1">Send your professional headshot to Agent Services<span class="item-note">Or let us know you'd like one taken at orientation</span></label></li>
+        <li><input type="checkbox" id="c6-2" onchange="handleCheck(this)"><label for="c6-2">Send your 4-digit after-hours access code + # to Agent Services<span class="item-note">Example: 5823#</span></label></li>
+        <li><input type="checkbox" id="c6-5" onchange="handleCheck(this)"><label for="c6-5">Join the KW Domain Facebook group<span class="item-note"><a href="javascript:void(0)" onclick="goTo('https://www.facebook.com/share/g/1CTTPQRQfe/'); return false;" style="color:var(--rouge);">Click here to join</a></span></label></li>
+      </ul>
+      <div class="divider"></div>
+<button class="mark-complete-btn" onclick="markComplete('stage-6')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="lbl-stage-6">Mark Stage 6 Complete</span></button>
+    </div>
+  </div>
+
+  <!-- STAGE 7 -->
+  <div class="stage" id="stage-7">
+    <div class="stage-header" onclick="toggleStage('stage-7')">
+      <div class="stage-num">7</div>
+      <div class="stage-title-wrap">
+        <div class="stage-title">Schedule Your Orientation</div>
+        <div class="stage-subtitle">Agent orientation + marketing overview at KWD Bloomfield Hills</div>
+      </div>
+      <svg class="stage-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="stage-body">
+      <div class="orientation-card">
+        <h3>Let's Get You Oriented!</h3>
+        <p>Agent Services would love to set up your orientation and marketing overview at our KWD Bloomfield Hills office. This is about <strong style="color:white;">1-1.5 hours</strong> and covers everything you need to hit the ground running.</p>
+        <span class="orientation-tag">KWD Bloomfield Hills Office</span>
+        <span class="orientation-tag">1-1.5 hours</span>
+      </div>
+      <p class="stage-intro" style="margin-top:4px;">Reply to Agent Services with a few dates and times that work for you and we'll get it on the calendar!</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="c7-1" onchange="handleCheck(this)"><label for="c7-1">Reply to Agent Services with your available dates &amp; times</label></li>
+        <li><input type="checkbox" id="c7-2" onchange="handleCheck(this)"><label for="c7-2">Confirm your orientation appointment</label></li>
+        <li><input type="checkbox" id="c7-3" onchange="handleCheck(this)"><label for="c7-3">Attend orientation &amp; marketing overview at KWD Bloomfield Hills</label></li>
+      </ul>
+      <div class="divider"></div>
+      <button class="mark-complete-btn" onclick="markComplete('stage-7')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="lbl-stage-7">Mark Stage 7 Complete</span></button>
+    </div>
+  </div>
+
+  <!-- STAGE 8 -->
+  <div class="stage" id="stage-8">
+    <div class="stage-header" onclick="toggleStage('stage-8')">
+      <div class="stage-num">8</div>
+      <div class="stage-title-wrap">
+        <div class="stage-title">Tech Onboarding with Yelena</div>
+        <div class="stage-subtitle">1-on-1 tech session to get you fully set up in KW systems</div>
+      </div>
+      <svg class="stage-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="stage-body">
+      <div class="orientation-card">
+        <h3>Your Tech Onboarding Session</h3>
+        <p>Yelena Nisnevich, Director of Market Center Technology, will walk you through all the KW tech tools you'll use daily - KW Command, SmartPlans, KW Canva, and more. This is a separate session from your Agent Services orientation, scheduled independently with Yelena.</p>
+        <span class="orientation-tag">1-on-1 with Yelena</span>
+        <span class="orientation-tag">KWD Bloomfield Hills Office</span>
+      </div>
+      <div class="info-box"><strong>Before your session:</strong> Make sure you have your KW Command username and password ready, and that you've received your KW logins email from Scott LeRoy at .. Having these on hand makes the session much smoother!</div>
+      <ul class="checklist">
+        <li><input type="checkbox" id="c8-1" onchange="handleCheck(this)"><label for="c8-1">Confirm you've received your KW logins email from Scott LeRoy<span class="item-note">From support@scottleroymarketing.com - check spam if you don't see it</span></label></li>
+        <li><input type="checkbox" id="c8-3" onchange="handleCheck(this)"><label for="c8-3">Reach out to Yelena to confirm your tech onboarding appointment</label></li>
+        <li><input type="checkbox" id="c8-4" onchange="handleCheck(this)"><label for="c8-4">Attend your tech onboarding session</label></li>
+      </ul>
+      <div class="divider"></div>
+      <button class="mark-complete-btn" onclick="markComplete('stage-8')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="lbl-stage-8">Mark Stage 8 Complete</span></button>
+    </div>
+  </div>
+
+  <!-- STAGE 9 -->
+  <div class="stage" id="stage-9">
+    <div class="stage-header" onclick="toggleStage('stage-9')">
+      <div class="stage-num">9</div>
+      <div class="stage-title-wrap">
+        <div class="stage-title">Training &amp; Class Schedule</div>
+        <div class="stage-subtitle">The DSource, events calendar &amp; everything we offer</div>
+      </div>
+      <svg class="stage-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="stage-body">
+      <p class="stage-intro">The <strong>DSource</strong> is your one-stop shop for everything KW Domain offers - marketing templates, tech help, forms, services, and more. Bookmark it! And stay connected to our training calendar so you never miss a class or event.</p>
+      <ul class="checklist">
+        <li><input type="checkbox" id="c9-1" onchange="handleCheck(this)"><label for="c9-1">Explore the DSource and bookmark it<span class="item-note">Marketing templates, tech help, forms, services and more - thedsource.com</span></label></li>
+        <li><input type="checkbox" id="c9-2" onchange="handleCheck(this)"><label for="c9-2">Check the Training &amp; Events Calendar for upcoming classes</label></li>
+        <li><input type="checkbox" id="c9-3" onchange="handleCheck(this)"><label for="c9-3">Begin attending classes that apply to you</label></li>
+      </ul>
+      <div class="btn-group">
+        <a href="javascript:void(0)" onclick="goTo('https://thedsource.com'); return false;" class="btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Visit the DSource</a>
+        <a href="javascript:void(0)" onclick="goTo('https://drive.google.com/drive/folders/1dgV6VD9tw2m8zF66m14GkU1guAjy5hJi?usp=sharing'); return false;" class="btn btn-outline"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>View Training Calendar</a>
+      </div>
+      <div class="divider"></div>
+      <button class="mark-complete-btn" onclick="markComplete('stage-9')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="lbl-stage-9">Mark Stage 9 Complete</span></button>
+    </div>
+  </div>
+
+  <!-- STAGE 10 -->
+  <div class="stage" id="stage-10">
+    <div class="stage-header" onclick="toggleStage('stage-10')">
+      <div class="stage-num">10</div>
+      <div class="stage-title-wrap">
+        <div class="stage-title">Business Cards &amp; Signage</div>
+        <div class="stage-subtitle">Order your KWD branded cards, yard signs, open house signs &amp; riders</div>
+      </div>
+      <svg class="stage-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="stage-body">
+      <p class="stage-intro">Time to get your KW Domain brand out in the world! Below is everything you need to order business cards and signage. All orders are placed through Agent Services and any charges are added to your monthly agent invoice.</p>
+
+      <div class="info-box"><strong>Generic KWD Listing Panels available!</strong> These feature the office number and route all listing inquiries directly to you - even if your name isn't on the sign. A great option to get started quickly.</div>
+      <div class="alert"><strong>Bloomfield Hills listings:</strong> City ordinance requires Black &amp; Gold signage for all Bloomfield Hills listings.</div>
+
+      <span class="section-label">First Set of Complimentary Business Cards</span>
+      <p style="font-size:14px;color:var(--mid);margin-bottom:16px;line-height:1.7;">You'll receive 250 soft-touch luxury business cards completely complimentary! Once you let Agent Services know which style you like best, a custom proof will be sent over along with upgrade options and pricing if you'd like to go fancier. Check out the Business Card Style Guide PDF for all the options.</p>
+      <div class="btn-group" style="margin-bottom:28px;">
+        <a href="javascript:void(0)" onclick="goTo('https://drive.google.com/file/d/1RTWzztJAfS-7xwUTXh8BjdHCseYrEgSS/view?usp=drive_link'); return false;" class="btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Business Card Style Guide (PDF)</a>
+      </div>
+
+      <div class="divider"></div>
+      <span class="section-label">Signage Options &amp; Pricing</span>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">All prices per item. Tax and shipping not included. You'll receive a digital proof via email for approval before any order is produced.</p>
+
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <h4>Listing Panels - Installed (Signs-In)</h4>
+          <table><tr><td>24" x 30"</td><td>$64/each</td></tr></table>
+          <p class="card-note">Installed by Signs-In (KWD approved). Shipped to Signs-In in Highland - $40+ shipping applies.</p>
+        </div>
+        <div class="pricing-card">
+          <h4>Listing Panels + Frames - DIY</h4>
+          <table>
+            <tr><td>Panel only</td><td>$64/each</td></tr>
+            <tr><td>Frame + rider on top</td><td>$56.80/each</td></tr>
+            <tr><td>Frame + rider on bottom</td><td>$47.90/each</td></tr>
+            <tr><td>Frame + rider top &amp; bottom</td><td>$50/each</td></tr>
+          </table>
+        </div>
+        <div class="pricing-card">
+          <h4>Open House / For Sale / For Lease - DIY</h4>
+          <table>
+            <tr><td>Corrugated panel + wire stake</td><td>$19/each</td></tr>
+            <tr><td>Alumaboard + metal A-frame</td><td>$88.70/each</td></tr>
+          </table>
+        </div>
+        <div class="pricing-card">
+          <h4>Riders &amp; Condo Signs - DIY</h4>
+          <table>
+            <tr><td>Sign riders 6" x 24"</td><td>$21.50/each</td></tr>
+            <tr><td>Condo signs 18" x 24"</td><td>$22.50/each</td></tr>
+          </table>
+          <p class="card-note">Riders: For Lease, Sale Pending, Price Reduced, Coming Soon, Open House, and more.</p>
+        </div>
+      </div>
+
+      <div class="success-box">Free pickup available! DIY installation signs can be picked up at no charge from Arbor Oakland in Royal Oak.</div>
+
+      <div class="btn-group" style="margin-bottom:24px;">
+        <a href="javascript:void(0)" onclick="goTo('https://drive.google.com/file/d/1xtlYMosdQD2uccE5OJvfFeYI12IGqSXv/view?usp=drive_link'); return false;" class="btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Signage Style Guide (PDF)</a>
+      </div>
+
+      <ul class="checklist">
+        <li><input type="checkbox" id="c10-1" onchange="handleCheck(this)"><label for="c10-1">Review the Business Card Style Guide and choose your preferred style<span class="item-note">See the PDF for all options</span></label></li>
+        <li><input type="checkbox" id="c10-2" onchange="handleCheck(this)"><label for="c10-2">Let Agent Services know your preferred style<span class="item-note">A custom proof will be sent to you for approval - your first 250 cards are complimentary!</span></label></li>
+        <li><input type="checkbox" id="c10-3" onchange="handleCheck(this)"><label for="c10-3">Review signage options and identify what you need<span class="item-note">See the Signage Style Guide PDF for all options</span></label></li>
+        <li><input type="checkbox" id="c10-4" onchange="handleCheck(this)"><label for="c10-4">Place your signage order with Agent Services<span class="item-note">Charges added to your monthly agent invoice</span></label></li>
+      </ul>
+      <div class="divider"></div>
+      <button class="mark-complete-btn" onclick="markComplete('stage-10')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="lbl-stage-10">Mark Stage 10 Complete</span></button>
+    </div>
+  </div>
+
+</div>
+
+<div style="max-width:820px;margin:0 auto;padding:0 32px 40px;text-align:right;">
+  <button onclick="resetProgress()" style="background:none;border:none;font-size:12px;color:#aaa;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline;">Reset my progress</button>
+</div>
+<div class="footer">
+  <strong>KW Domain Luxury Homes International</strong> &middot; Bloomfield Hills, MI<br>
+  Questions at any point? Contact Agent Services - we're here every step of the way!
+</div>
+<script>
+var TOTAL=10,completedStages={};
+function saveProgress(){try{var checks={};document.querySelectorAll('.checklist input[type="checkbox"]').forEach(function(c){checks[c.id]=c.checked;});localStorage.setItem('kwd_onboarding',JSON.stringify({stages:completedStages,checks:checks}));}catch(e){}}
+function loadProgress(){try{var d=localStorage.getItem('kwd_onboarding');if(!d)return;var p=JSON.parse(d);if(p.checks){Object.keys(p.checks).forEach(function(id){if(!p.checks[id])return;var c=document.getElementById(id);if(!c)return;c.checked=true;var l=c.parentElement.querySelector('label');if(l)l.classList.add('checked');});}if(p.stages){Object.keys(p.stages).forEach(function(sid){if(!p.stages[sid])return;var el=document.getElementById(sid);if(!el)return;var num=sid.split('-')[1];el.classList.add('completed');el.classList.remove('open');completedStages[sid]=true;var lbl=document.getElementById('lbl-'+sid);if(lbl)lbl.textContent='Stage '+num+' Complete';var ne=el.querySelector('.stage-num');if(ne)ne.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';}});}updateProgress();}catch(e){}}
+function resetProgress(){if(confirm('Reset all your progress? This cannot be undone.')){try{localStorage.removeItem('kwd_onboarding');}catch(e){}location.reload();}}
+function toggleStage(a){var b=document.getElementById(a);b.classList.contains('open')?b.classList.remove('open'):b.classList.add('open');}
+function handleCheck(a){var b=a.parentElement.querySelector('label');a.checked?b.classList.add('checked'):b.classList.remove('checked');updateProgress();saveProgress();}
+function markComplete(a){var b=document.getElementById(a),c=a.split('-')[1],d=document.getElementById('lbl-'+a),e=b.querySelector('.stage-num');if(b.classList.contains('completed')){b.classList.remove('completed');delete completedStages[a];d.textContent='Mark Stage '+c+' Complete';e.textContent=c;}else{b.classList.add('completed');b.classList.remove('open');completedStages[a]=true;d.textContent='Stage '+c+' Complete';e.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';}updateProgress();saveProgress();}
+function selectMLSPath(a,b){document.querySelectorAll('.mls-path-btn').forEach(function(c){c.classList.remove('selected');});b.classList.add('selected');document.querySelectorAll('.mls-detail').forEach(function(c){c.classList.remove('visible');});document.getElementById('mls-'+a).classList.add('visible');}
+function updateProgress(){var a=Object.keys(completedStages).length;document.getElementById('progressFill').style.width=(a/TOTAL*100)+'%';document.getElementById('progressLabel').textContent=a+' of '+TOTAL+' complete';var b=document.getElementById('completionBanner');a===TOTAL?b.classList.add('visible'):b.classList.remove('visible');}
+function copyBrokerNum(a){if(navigator.clipboard){navigator.clipboard.writeText('6505391898').then(function(){a.textContent='Copied!';setTimeout(function(){a.textContent='Copy Number';},2000);});}else{a.textContent='6505391898';setTimeout(function(){a.textContent='Copy Number';},3000);}}
+function goTo(url){window.open(url,'_blank');return false;}
+window.addEventListener('DOMContentLoaded',function(){loadProgress();});
+</script>
+</body>
+</html>
