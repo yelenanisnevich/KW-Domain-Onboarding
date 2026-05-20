@@ -1,0 +1,121 @@
+var TOTAL=10,completedStages={};
+
+function saveProgress(){
+  try{
+    var checks={};
+    document.querySelectorAll(".checklist input[type=checkbox]").forEach(function(c){checks[c.id]=c.checked;});
+    localStorage.setItem("kwd_onboarding",JSON.stringify({stages:completedStages,checks:checks}));
+  }catch(e){}
+}
+
+function loadProgress(){
+  try{
+    var d=localStorage.getItem("kwd_onboarding");
+    if(!d)return;
+    var p=JSON.parse(d);
+    if(p.checks){
+      Object.keys(p.checks).forEach(function(id){
+        if(!p.checks[id])return;
+        var c=document.getElementById(id);
+        if(!c)return;
+        c.checked=true;
+        var l=c.parentElement.querySelector("label");
+        if(l)l.classList.add("checked");
+      });
+    }
+    if(p.stages){
+      Object.keys(p.stages).forEach(function(sid){
+        if(!p.stages[sid])return;
+        var el=document.getElementById(sid);
+        if(!el)return;
+        var num=sid.split("-")[1];
+        el.classList.add("completed");
+        el.classList.remove("open");
+        completedStages[sid]=true;
+        var lbl=document.getElementById("lbl-"+sid);
+        if(lbl)lbl.textContent="Stage "+num+" Complete";
+        var ne=el.querySelector(".stage-num");
+        if(ne)ne.textContent=num+"✓";
+      });
+    }
+    updateProgress();
+  }catch(e){}
+}
+
+function resetProgress(){
+  if(confirm("Reset all your progress? This cannot be undone.")){
+    try{localStorage.removeItem("kwd_onboarding");}catch(e){}
+    location.reload();
+  }
+}
+
+function toggleStage(a){
+  var b=document.getElementById(a);
+  if(b.classList.contains("open")){
+    b.classList.remove("open");
+  }else{
+    b.classList.add("open");
+  }
+}
+
+function handleCheck(a){
+  var b=a.parentElement.querySelector("label");
+  if(a.checked){b.classList.add("checked");}else{b.classList.remove("checked");}
+  updateProgress();
+  saveProgress();
+}
+
+function markComplete(a){
+  var b=document.getElementById(a);
+  var c=a.split("-")[1];
+  var d=document.getElementById("lbl-"+a);
+  var e=b.querySelector(".stage-num");
+  if(b.classList.contains("completed")){
+    b.classList.remove("completed");
+    delete completedStages[a];
+    d.textContent="Mark Stage "+c+" Complete";
+    e.textContent=c;
+  }else{
+    b.classList.add("completed");
+    b.classList.remove("open");
+    completedStages[a]=true;
+    d.textContent="Stage "+c+" Complete";
+    e.textContent=c+"✓";
+  }
+  updateProgress();
+  saveProgress();
+}
+
+function selectMLSPath(a,b){
+  document.querySelectorAll(".mls-path-btn").forEach(function(c){c.classList.remove("selected");});
+  b.classList.add("selected");
+  document.querySelectorAll(".mls-detail").forEach(function(c){c.classList.remove("visible");});
+  document.getElementById("mls-"+a).classList.add("visible");
+}
+
+function updateProgress(){
+  var a=Object.keys(completedStages).length;
+  document.getElementById("progressFill").style.width=(a/TOTAL*100)+"%";
+  document.getElementById("progressLabel").textContent=a+" of "+TOTAL+" complete";
+  var b=document.getElementById("completionBanner");
+  if(a===TOTAL){b.classList.add("visible");}else{b.classList.remove("visible");}
+}
+
+function copyBrokerNum(a){
+  if(navigator.clipboard){
+    navigator.clipboard.writeText("6505391898").then(function(){
+      a.textContent="Copied!";
+      setTimeout(function(){a.textContent="Copy Number";},2000);
+    });
+  }else{
+    a.textContent="6505391898";
+    setTimeout(function(){a.textContent="Copy Number";},3000);
+  }
+}
+
+function goTo(url){
+  window.open(url,"_blank");
+  return false;
+}
+
+window.addEventListener("DOMContentLoaded",function(){loadProgress();});
